@@ -121,7 +121,7 @@ export function AuthiumProvider({
     return (
         <AuthiumContext.Provider value={{
             user,
-            isLoggedIn: !!user,
+            isLoggedIn: !!accessToken && expiry > Date.now(),
             signIn,
             signOut,
             refresh,

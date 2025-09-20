@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useAuthiumCallback } from "authium-next";
 
 export default function CallbackPage() {
