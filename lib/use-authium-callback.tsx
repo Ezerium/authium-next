@@ -25,13 +25,14 @@ export function useAuthiumCallback() {
         }
 
         const storedCsrf = storage.get("authium_csrf");
-        storage.remove("authium_csrf");
         if (state !== storedCsrf) {
+            storage.remove("authium_csrf");
             setError("CSRF token mismatch");
             setLoading(false);
             return;
         }
-
+        
+        storage.remove("authium_csrf");
         try {
             save(accessToken, refreshToken, Date.now() + Number(expiry) * 1000);
             setLoading(false);

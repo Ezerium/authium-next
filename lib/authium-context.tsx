@@ -90,25 +90,31 @@ export function AuthiumProvider({
         storage.set("authium", encrypted);
     }
 
-    function signIn(expiryOverride?: number) {
+    function signIn(expiryOverride?: number, fallback?: () => never) {
         if (!config || !config.appId || !config.apiKey) {
             setError("Authium not configured. Please provide appId and apiKey to AuthiumProvider.");
             return;
+        }
+
+        if (user || (accessToken && expiry > Date.now())) {
+            fallback?.();
         }
 
         const csrf = Math.random().toString(36).substring(2);
         storage.set("authium_csrf", csrf);
 
         let url = `https://authium.ezerium.com/authorize?appId=${config.appId}&apiKey=${config.apiKey}&state=${csrf}`;
-        if (expiryOverride) url += `&expiry=${expiryOverride}`;
+        if (expiryOverride) url += `&exp=${expiryOverride}`;
         window.location.href = url;
     }
 
     async function signOut(): Promise<void> {
         try {
-            await axios.post(`${DAEMON_ENDPOINT}/user/logout`, {
+            const res = await axios.post(`${DAEMON_ENDPOINT}/user/logout`, null, {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
+            if (res.status !== 200) 
+                throw new Error("Failed to log out");
             clearTokens();
         } catch (err) {
             console.error("Failed to log out", err);
