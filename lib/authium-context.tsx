@@ -17,6 +17,8 @@ const DAEMON_ENDPOINT = "https://api.authium.ezerium.com/v1";
 interface AuthiumContextValue {
     user: User | null;
     isLoggedIn: boolean;
+    loading: boolean;
+    error: string | null;
     signIn: (expiryOverride?: number) => void;
     signOut: () => void;
     refresh: () => Promise<void>;
@@ -28,7 +30,7 @@ export function AuthiumProvider({
     config,
     children,
 }: {
-    config: AuthiumConfig;
+    config?: Partial<AuthiumConfig>;
     children: ReactNode;
 }) {
     const storage = useStorage();
@@ -36,8 +38,13 @@ export function AuthiumProvider({
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [refreshToken, setRefreshToken] = useState<string | null>(null);
     const [expiry, setExpiry] = useState<number>(0);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        setError(null);
+        setLoading(true);
+
         const saved = storage.get("authium");
         if (!saved) return;
 
@@ -52,8 +59,14 @@ export function AuthiumProvider({
         setAccessToken(access);
         setRefreshToken(refresh);
         setExpiry(expiryNum);
-        fetchUserData(access).then(setUser).catch(() => {
+        fetchUserData(access).then((u) => {
+            setUser(u);
+            setLoading(false);
+        }).catch(() => {
             console.error("Failed to fetch user on init");
+            setLoading(false);
+            setError("Failed to fetch user data");
+
             clearTokens();
         });
     }, [storage]);
@@ -76,6 +89,11 @@ export function AuthiumProvider({
     }
 
     function signIn(expiryOverride?: number) {
+        if (!config || !config.appId || !config.apiKey) {
+            setError("Authium not configured. Please provide appId and apiKey to AuthiumProvider.");
+            return;
+        }
+
         const csrf = Math.random().toString(36).substring(2);
         storage.set("authium_csrf", csrf);
 
@@ -95,7 +113,9 @@ export function AuthiumProvider({
         }
     }
 
-    async function refresh(): Promise<void> {
+    async function refresh(updateLoadingState: boolean = false): Promise<void> {
+        if (updateLoadingState) setLoading(true);
+
         let diff = expiry - Date.now();
         if (diff > 60 * 1000) return;
 
@@ -115,6 +135,8 @@ export function AuthiumProvider({
         } catch (err) {
             console.error("Failed to refresh token", err);
             clearTokens();
+        } finally {
+            if (updateLoadingState) setLoading(false);
         }
     }
 
@@ -122,6 +144,8 @@ export function AuthiumProvider({
         <AuthiumContext.Provider value={{
             user,
             isLoggedIn: !!accessToken && expiry > Date.now(),
+            loading,
+            error,
             signIn,
             signOut,
             refresh,

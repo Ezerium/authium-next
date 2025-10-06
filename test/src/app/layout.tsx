@@ -30,8 +30,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthiumProvider config={{
-          appId: "grcLdbLVHNoAIUtynwyqMKT1T7uIzirl",
-          apiKey: "ezpk_qJtjp21Id13GJvA7URsER1e7DUWJrJVCQHBH",
+          // test keys, rotated after every release
+          appId: process.env.NEXT_PUBLIC_APP_ID || "",
+          apiKey: process.env.NEXT_PUBLIC_API_KEY || "",
         }}>
           {children}
         </AuthiumProvider>
