@@ -3,13 +3,15 @@ import { AuthiumConfig, User } from "./types";
 interface AuthiumContextValue {
     user: User | null;
     isLoggedIn: boolean;
+    loading: boolean;
+    error: string | null;
     signIn: (expiryOverride?: number) => void;
     signOut: () => void;
     refresh: () => Promise<void>;
     save: (access: string, refresh: string, expiry: number) => void;
 }
 export declare function AuthiumProvider({ config, children, }: {
-    config: AuthiumConfig;
+    config?: Partial<AuthiumConfig>;
     children: ReactNode;
 }): import("react/jsx-runtime").JSX.Element;
 export declare function useAuthium(): AuthiumContextValue;
