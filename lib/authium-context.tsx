@@ -46,14 +46,15 @@ export function AuthiumProvider({
         setLoading(true);
 
         const saved = storage.get("authium");
-        if (!saved) return;
+        if (!saved) return clearTokens();
 
         const decrypted = decrypt(saved);
-        if (!decrypted) return clearTokens();
+        if (!decrypted) 
+            return clearTokens();
 
         const [access, refresh, expiryStr] = decrypted.split("\n");
         const expiryNum = parseInt(expiryStr!, 10);
-        if (!access || !refresh || !expiryNum || Date.now() > expiryNum)
+        if (!access || !refresh || !expiryNum || Date.now() > expiryNum) 
             return clearTokens();
         
         setAccessToken(access);
@@ -77,6 +78,7 @@ export function AuthiumProvider({
         setRefreshToken(null);
         setExpiry(0);
         setUser(null);
+        setLoading(false);
     }
 
     function save(access: string, refresh: string, expiry: number) {
